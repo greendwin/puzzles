@@ -1,7 +1,8 @@
 EXECUTABLE=task1589.elf
-SOURCES=task1589.cpp
+SOURCES=main.cpp level.cpp
+HEADERS=mask.h level.h
 
-CFLAGS=-Wall
+CFLAGS=-std=c++11 -Wall -Wextra -Wno-c++1z-extensions
 LINKFLAGS=-lstdc++
 
 OBJECTS=$(SOURCES:.cpp=.o)
@@ -11,7 +12,7 @@ all: $(SOURCES) $(EXECUTABLE)
 $(EXECUTABLE): $(OBJECTS)
 	clang $(LINKFLAGS) $(OBJECTS) -o $@
 
-.cpp.o:
+%.o: %.cpp $(HEADERS)
 	clang $(CFLAGS) -c $< -o $@
 
 clean:
