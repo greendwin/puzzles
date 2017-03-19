@@ -12,5 +12,6 @@ int main() {
 	Level l;
 	load_level_from_file("input.txt", &l);
 
+	printf("Hello world!\n");
 	return 0;
 }
