@@ -62,3 +62,4 @@ void level_load(istream& input, Level* level) {
 		++row;
 	}
 }
+
