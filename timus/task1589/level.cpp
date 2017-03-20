@@ -1,56 +1,64 @@
 #include <cstdio>
 #include <fstream>
+#include <sstream>
 
 #include "level.h"
 
 using namespace std;
 
 
-void load_level_from_file(const char* filename, Level* level) {
+void level_load_from_file(const char* filename, Level* level) {
 	ifstream input{filename};
-	load_level(input, level);
+	level_load(input, level);
 }
 
 
-void _parse_line(Level* level, int row, string& line) {
+void level_load(const char* field, Level* level) {
+	istringstream input{field};
+	level_load(input, level);
+}
+
+
+static void _level_parse_line(Level* level, int row, string& line) {
 	for (int k = 0; k < (int)line.size(); ++k) {
 		char ch = line[k];
 
 		switch (ch) {
 			case '#':
-				level->walls.set(k, row);
+				mask_set(level->walls, k, row);
 				break;
 
 			case '.':
-				level->targets.set(k, row);
+				mask_set(level->targets, k, row);
 				break;
 
 			case '@':
-				level->state.set_coords(k, row);
+				mask_set_coords(level->state, k, row);
 				break;
 
 			case '+':
-				level->targets.set(k, row);
-				level->state.set_coords(k, row);
+				mask_set(level->targets, k, row);
+				mask_set_coords(level->state, k, row);
 				break;
 
 			case '$':
-				level->state.set(k, row);
+				mask_set(level->state, k, row);
 				break;
 
 			case '*':
-				level->targets.set(k, row);
-				level->state.set(k, row);
+				mask_set(level->targets, k, row);
+				mask_set(level->state, k, row);
 				break;
 		}
 	}
 }
 
 
-void load_level(istream& input, Level* level) {
+void level_load(istream& input, Level* level) {
 	string line;
 	int row = 0;
 	while (getline(input, line)) {
-		_parse_line(level, row, line);
+		_level_parse_line(level, row, line);
+		++row;
 	}
 }

@@ -12,7 +12,7 @@ TESTS = unittests
 
 SRC = level.cpp
 EXEC_SRC = main.cpp
-TESTS_SRC = test_mask.cpp
+TESTS_SRC = $(wildcard test_*.cpp)
 HEADERS = $(wildcard *.h)
 
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \

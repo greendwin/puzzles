@@ -4,17 +4,20 @@
 
 
 template <
-	class DataType,
-	int FieldOffset,
-	int FieldSize,
-	int CoordBits = 0		// per coord
+	class _DataType,
+	int _Offset,
+	int _Dimension,
+	int _CoordBits = 0		// per coord
 >
 struct Mask {
-	static_assert(FieldSize * FieldSize + 2 * CoordBits <= 8 * sizeof(DataType));
+	using DataType = _DataType;
 
-	static const int Offset = FieldOffset;
-	static const int Dimension = FieldSize;
+	static const int Offset = _Offset;
+	static const int Dimension = _Dimension;
 	static const int Max = Offset + Dimension;
+	static const int CoordBits = _CoordBits;
+
+	static_assert(Dimension * Dimension + 2 * CoordBits <= 8 * sizeof(DataType));
 
 	DataType data;
 
@@ -22,54 +25,70 @@ struct Mask {
 		: data(0)
 	{}
 
-	static constexpr DataType shift_bit(int count) { return (DataType)1 << count; }
-	static constexpr DataType get_mask(int count) { return shift_bit(count) - 1; }
-
-	void set(int x, int y, bool v = true) {
-		assert(FieldOffset <= x && x < FieldOffset + FieldSize);
-		assert(FieldOffset <= y && y < FieldOffset + FieldSize);
-	
-		int bit = (x - FieldOffset) * FieldSize + (y - FieldOffset);
-		if (v) {
-			data |= shift_bit(bit);
-		} else {
-			data &= ~shift_bit(bit);
-		}
-	}
-
-	void reset(int x, int y) { set(x, y, false); }
-
-	bool get(int x, int y) const {
-		assert(FieldOffset <= x && x < FieldOffset + FieldSize);
-		assert(FieldOffset <= y && y < FieldOffset + FieldSize);
-	
-		int bit = (x - FieldOffset) * FieldSize + (y - FieldOffset);
-		return data & shift_bit(bit);
-	}
-
-	void set_coords(int x, int y) {
-		assert(0 <= x && x < (1 << CoordBits));
-		assert(0 <= y && y < (1 << CoordBits));
-
-		int field_offset = FieldSize * FieldSize;
-		
-		// reset prev coords
-		DataType coords_mask = get_mask(2 * CoordBits);	// 00001111
-		data &= ~(coords_mask << field_offset);
-
-		// xxyy0000
-		data |= (DataType)x << (field_offset + CoordBits);
-		data |= (DataType)y << field_offset;
-	}
-
-	void get_coords(int* x, int* y) const {
-		int field_offset = FieldSize * FieldSize;
-		DataType xx = data >> (field_offset + CoordBits);
-		DataType yy = data >> field_offset;
-
-		DataType coord_mask = get_mask(CoordBits);
-		*x = int(xx & coord_mask);
-		*y = int(yy & coord_mask);
-	}
+	// small helpers
+	static constexpr DataType _shift_bit(int count) { return (DataType)1 << count; }
+	static constexpr DataType _get_mask(int count)  { return _shift_bit(count) - 1; }
 };
+
+
+template <class M>
+void mask_set(M& m, int x, int y, bool v = true) {
+	assert(M::Offset <= x && x < M::Max);
+	assert(M::Offset <= y && y < M::Max);
+	
+	int bit = (x - M::Offset) * M::Dimension + (y - M::Offset);
+	if (v) {
+		m.data |= m._shift_bit(bit);
+	} else {
+		m.data &= ~m._shift_bit(bit);
+	}
+}
+
+
+template <class M>
+void mask_reset(M& m, int x, int y) {
+	mask_set(m, x, y, false);
+}
+
+
+template <class M>
+bool mask_get(const M& m, int x, int y) {
+	assert(M::Offset <= x && x < M::Max);
+	assert(M::Offset <= y && y < M::Max);
+	
+	int bit = (x - M::Offset) * M::Dimension + (y - M::Offset);
+	return m.data & m._shift_bit(bit);
+}
+
+
+template <class M>
+void mask_set_coords(M& m, int x, int y) {
+	assert(0 <= x && x < (1 << M::CoordBits));
+	assert(0 <= y && y < (1 << M::CoordBits));
+
+	using DataType = typename M::DataType;
+	int field_offset = M::Dimension * M::Dimension;
+		
+	// reset prev coords
+	DataType coords_mask = m._get_mask(2 * M::CoordBits);	// 00001111
+	m.data &= ~(coords_mask << field_offset);
+
+	// xxyy0000
+	m.data |= (DataType)x << (field_offset + M::CoordBits);
+	m.data |= (DataType)y << field_offset;
+}
+
+
+template <class M>
+void mask_get_coords(const M& m, int* x, int* y) {
+	using DataType = typename M::DataType;
+
+	int field_offset = M::Dimension * M::Dimension;
+	DataType xx = m.data >> (field_offset + M::CoordBits);
+	DataType yy = m.data >> field_offset;
+
+	DataType coord_mask = m._get_mask(M::CoordBits);
+	*x = int(xx & coord_mask);
+	*y = int(yy & coord_mask);
+}
 
