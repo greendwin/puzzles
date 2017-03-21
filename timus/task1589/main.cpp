@@ -42,10 +42,42 @@ void run_game(Level& l) {
 }
 
 
+void print_unreachable_cells(const Level& level_) {
+	Level level = level_;
+
+	// remove all boxes
+	int plrX, plrY;
+	mask_get_coords(level.state, &plrX, &plrY);
+	level.state = StateMask();
+	mask_set_coords(level.state, plrX, plrY);
+
+	// mark all places, where player can move
+	StateMask reachable;
+	level_mark_reachable(level, &reachable);
+
+	// mark unreachable cells
+	StateMask unreachable;
+	for (int x = StateMask::Offset; x < StateMask::Max; ++x) {
+		for (int y = StateMask::Offset; y < StateMask::Max; ++y) {
+			if (!mask_get(reachable, x, y)) {
+				continue;
+			}
+
+			if (level_is_dead_position(level, x, y)) {
+				mask_set(unreachable, x, y);
+			}
+		}
+	}
+
+	level_print(level_, cout, &unreachable);
+}
+
+
 int main() {
 	Level l;
 	level_load_from_file("input.txt", &l);
 
-	run_game(l);
+//	run_game(l);
+    print_unreachable_cells(l);
 	return 0;
 }

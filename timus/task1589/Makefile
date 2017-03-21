@@ -10,7 +10,7 @@ TMP_DIR = tmp
 EXEC = task
 TESTS = unittests
 
-SRC = level.cpp
+SRC = level.cpp search.cpp
 EXEC_SRC = main.cpp
 TESTS_SRC = $(wildcard test_*.cpp)
 HEADERS = $(wildcard *.h)

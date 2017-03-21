@@ -53,11 +53,11 @@ void mask_reset(M& m, int x, int y) {
 
 template <class M>
 bool mask_get(const M& m, int x, int y) {
-	assert(0 <= x && x < M::Max);
-	assert(0 <= y && y < M::Max);
-
 	// output false under offset
 	if (x < M::Offset || y < M::Offset) {
+		return false;
+	}
+	if (x >= M::Max || y >= M::Max) {
 		return false;
 	}
 	

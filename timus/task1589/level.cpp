@@ -90,7 +90,7 @@ static void _level_calc_field_size(const Level& level, int* sizeX, int* sizeY) {
 }
 
 
-void level_print(const Level& level, ostream& output) {
+void level_print(const Level& level, ostream& output, const StateMask* overlay, char overlaySymbol) {
 	int sizeX, sizeY;
 	_level_calc_field_size(level, &sizeX, &sizeY);
 
@@ -99,6 +99,11 @@ void level_print(const Level& level, ostream& output) {
 
 	for (int y = 0; y < sizeY; ++y) {
 		for (int x = 0; x < sizeX; ++x) {
+			if (overlay && mask_get(*overlay, x, y)) {
+				output << overlaySymbol;
+				continue;
+			}
+
 			// wall
 			if (mask_get(level.walls, x, y)) {
 				output << '#';
@@ -205,7 +210,7 @@ MoveResult level_move_to(Level& level, Direction dir) {
 }
 
 
-bool level_is_finish_state(const StateMask& state, const TargetsMask& targets) {
+bool level_is_finish_state(StateMask state, TargetsMask targets) {
 	// check that every box is on the target
 	for (int x = StateMask::Offset; x < StateMask::Max; ++x) {
 		for (int y = StateMask::Offset; y < StateMask::Max; ++y) {
