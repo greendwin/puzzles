@@ -51,3 +51,7 @@ LevelItem level_look_at(const Level& level, Direction dir);
 LevelItem level_look_at(const Level& level, int x, int y);
 
 MoveResult level_move_to(Level& level, Direction dir);
+
+bool level_is_finish_state(const StateMask& state, const TargetsMask& targets);
+inline bool level_is_finish_state(const Level& level) { return level_is_finish_state(level.state, level.targets); }
+

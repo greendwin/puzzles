@@ -204,3 +204,17 @@ MoveResult level_move_to(Level& level, Direction dir) {
 	return MoveResult::MovedBlock;
 }
 
+
+bool level_is_finish_state(const StateMask& state, const TargetsMask& targets) {
+	// check that every box is on the target
+	for (int x = StateMask::Offset; x < StateMask::Max; ++x) {
+		for (int y = StateMask::Offset; y < StateMask::Max; ++y) {
+			if (mask_get(state, x, y) and !mask_get(targets, x, y)) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+

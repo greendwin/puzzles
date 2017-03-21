@@ -2,16 +2,50 @@
 #include <stdio.h>
 #include "level.h"
 
-// TODO: gtest
-// TODO: Mask class tests
-// TODO: print Mask to tty
-// TODO: print Level
+using namespace std;
+
+
+void run_game(Level& l) {
+	string line;
+	for (;;) {
+		level_print(l, cout);
+		if (level_is_finish_state(l)) {
+			cout << "Puzzle complete!\n";
+			return;
+		}
+
+		bool r = getline(cin, line);
+		if (!r) {
+			break;
+		}
+
+		for (int idx = 0; idx < (int)line.size(); ++idx) {
+			char ch = line[idx];
+
+			if (ch == 'r') {
+				level_move_to(l, Direction::Right); 
+			} else if (ch == 'l') {
+				level_move_to(l, Direction::Left); 
+			} else if (ch == 'u') {
+				level_move_to(l, Direction::Up); 
+			} else if (ch == 'd') {
+				level_move_to(l, Direction::Down); 
+			} else if (ch == 'q') {
+				cout << "Exit game\n";
+				return;
+			} else {
+				cout << "Unknown command, use r, l, u, d and q\n";
+				break;
+			}
+		}
+	}
+}
 
 
 int main() {
 	Level l;
 	level_load_from_file("input.txt", &l);
 
-	printf("Hello world!\n");
+	run_game(l);
 	return 0;
 }
