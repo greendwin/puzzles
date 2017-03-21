@@ -20,3 +20,5 @@ void level_load_from_file(const char* filename, Level* level);
 void level_load(const char* input, Level* level);
 void level_load(std::istream& input, Level* level);
 
+void level_print(const Level& level, std::ostream& output);
+

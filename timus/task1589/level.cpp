@@ -63,3 +63,68 @@ void level_load(istream& input, Level* level) {
 	}
 }
 
+
+static void _level_calc_field_size(const Level& level, int* sizeX, int* sizeY) {
+	// detect size by walls
+	int xxx	= 0;
+	int yyy = 0;
+	for (int y = 0; y < WallMask::Max; ++y) {
+		for (int x = 0; x < WallMask::Max; ++x) {
+			if (mask_get(level.walls, x, y)) {
+				if (xxx < x) {
+					xxx = x;
+				}
+				if (yyy < y) {
+					yyy = y;
+				}
+			}
+		}
+	}
+
+	*sizeX = xxx + 1;
+	*sizeY = yyy + 1;
+}
+
+
+void level_print(const Level& level, ostream& output) {
+	int sizeX, sizeY;
+	_level_calc_field_size(level, &sizeX, &sizeY);
+
+	int posX, posY;
+	mask_get_coords(level.state, &posX, &posY);
+
+	for (int y = 0; y < sizeY; ++y) {
+		for (int x = 0; x < sizeX; ++x) {
+			// wall
+			if (mask_get(level.walls, x, y)) {
+				output << '#';
+				continue;
+			}
+
+			bool is_target = mask_get(level.targets, x, y);
+
+			// block
+			if (mask_get(level.state, x, y)) {
+				output << (is_target ? '*' : '$');
+				continue;
+			}
+
+			// player
+			if (x == posX && y == posY) {
+				output << (is_target ? '+' : '@');
+				continue;
+			}
+
+			// empty target
+			if (is_target) {
+				output << '.';
+				continue;
+			}
+
+			// otherwise empty space
+			output << ' ';
+		}
+		output << '\n';
+	}
+}
+

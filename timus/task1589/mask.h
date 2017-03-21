@@ -53,8 +53,13 @@ void mask_reset(M& m, int x, int y) {
 
 template <class M>
 bool mask_get(const M& m, int x, int y) {
-	assert(M::Offset <= x && x < M::Max);
-	assert(M::Offset <= y && y < M::Max);
+	assert(0 <= x && x < M::Max);
+	assert(0 <= y && y < M::Max);
+
+	// output false under offset
+	if (x < M::Offset || y < M::Offset) {
+		return false;
+	}
 	
 	int bit = (x - M::Offset) * M::Dimension + (y - M::Offset);
 	return m.data & m._shift_bit(bit);
