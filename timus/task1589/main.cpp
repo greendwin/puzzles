@@ -1,6 +1,9 @@
 
 #include <stdio.h>
+
+#ifndef ONLINE_JUDGE
 #include "level.h"
+#endif
 
 using namespace std;
 
@@ -71,13 +74,109 @@ void print_solution(Level level) {
 }
 
 
+void print_solution_by_steps(Level level) {
+	SolvePath path;
+	level_solve(level, &path);
+
+	// initial
+	level_print(level, cout);
+
+	for (int k = 0; k < (int)path.size(); ++k) {
+		int curX, curY;
+		mask_get_coords(level.state, &curX, &curY);
+
+		SolveStep step = path[k];
+		int plrX = step.x - direction_dx[(int)step.dir];
+		int plrY = step.y - direction_dy[(int)step.dir];
+
+		if (curX != plrX || curY != plrY) {
+			// emit intermediate movement steps
+			SolvePath movePath;
+			level_move_to(level, plrX, plrY, &movePath);
+
+			for (int kkk = 0; kkk < (int)movePath.size(); ++kkk) {
+				level_move_to(level, movePath[kkk].dir);
+				
+				getchar();
+				cout << "-\n";
+				level_print(level, cout);
+			}
+		}
+
+		// move block
+		level_move_to(level, step.dir);
+		getchar();
+		cout << "-\n";
+		level_print(level, cout);
+	}
+}
+
+
+static void _print_dir(Direction dir, bool blockMoved) {
+	switch (dir) {
+		case Direction::Left:
+			cout << (blockMoved ? "L" : "l");
+			break;
+		case Direction::Right:
+			cout << (blockMoved ? "R" : "r");
+			break;
+		case Direction::Up:
+			cout << (blockMoved ? "U" : "u");
+			break;
+		case Direction::Down:
+			cout << (blockMoved ? "D" : "d");
+			break;
+	}
+}
+
+
+void print_timus(Level level) {
+	SolvePath path;
+	level_solve(level, &path);
+
+	for (int k = 0; k < (int)path.size(); ++k) {
+		int curX, curY;
+		mask_get_coords(level.state, &curX, &curY);
+
+		SolveStep step = path[k];
+		int plrX = step.x - direction_dx[(int)step.dir];
+		int plrY = step.y - direction_dy[(int)step.dir];
+
+		if (curX != plrX || curY != plrY) {
+			// emit intermediate movement steps
+			SolvePath movePath;
+			level_move_to(level, plrX, plrY, &movePath);
+
+			for (int kkk = 0; kkk < (int)movePath.size(); ++kkk) {
+				level_move_to(level, movePath[kkk].dir);
+				_print_dir(movePath[kkk].dir, false);
+			}
+		}
+
+		// move block
+		level_move_to(level, step.dir);
+		_print_dir(step.dir, true);
+	}
+
+	cout << endl;
+}
+
+
 int main() {
 	Level l;
-	//level_load_from_file("input.txt", &l);
-	level_load_from_file("level8.txt", &l);
+
+#ifdef ONLINE_JUDGE
+	level_load(cin, &l);
+	print_timus(l);
+#else
+	level_load_from_file("input2.txt", &l);
+	//level_load_from_file("level8.txt", &l);
 
 	//run_game(l);
     //print_unreachable_cells(l);
-	print_solution(l);
+	//print_solution(l);
+	print_solution_by_steps(l);
+#endif
+
 	return 0;
 }

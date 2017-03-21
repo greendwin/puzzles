@@ -3,3 +3,5 @@ tmp
 *.a
 task
 unittests
+_task_timus.cpp
+task_timus

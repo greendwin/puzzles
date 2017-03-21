@@ -1,5 +1,12 @@
 
+#include <queue>
+#include <algorithm>
+
+#ifndef ONLINE_JUDGE
 #include "level.h"
+#endif
+
+using namespace std;
 
 
 static void _level_mark(const Level& level, int x, int y, StateMask& mask) {
@@ -204,3 +211,72 @@ bool level_solve(const Level& level, SolvePath* path) {
 
 	return r;
 }
+
+
+bool level_move_to(Level level, int tgtX, int tgtY, SolvePath* path) {
+	int x0, y0;
+	mask_get_coords(level.state, &x0, &y0);
+
+	// mark initial pos as visited and push it to queue
+	StateMask visited;
+	mask_set(visited, x0, y0);
+
+	queue<StateMask> q;
+	q.push(level.state);
+
+	// allocate array for path restore
+	vector<SolveStep> steps(WallMask::Max * WallMask::Max, SolveStep(0, 0, Direction::Left));
+
+	while (!q.empty()) {
+		level.state = q.front();
+		q.pop();
+
+		int x, y;
+		mask_get_coords(level.state, &x, &y);
+
+		if (x == tgtX && y == tgtY) {
+			break;
+		}
+
+		for (int dir = 0; dir < direction_count; ++dir) {
+			if (level_look_at(level, (Direction)dir) != LevelItem::Empty) {
+				continue;
+			}
+
+			int nextX = x + direction_dx[dir];
+			int nextY = y + direction_dy[dir];
+
+			if (mask_get(visited, nextX, nextY)) {
+				continue;
+			}
+
+			StateMask next_state = level.state;
+			mask_set_coords(next_state, nextX, nextY);
+			q.push(next_state);
+
+			mask_set(visited, nextX, nextY);
+
+			SolveStep step(x, y, (Direction)dir);
+			steps[nextX * WallMask::Max + nextY] = step;
+		}
+	}
+
+	// restore path
+	int curX = tgtX;
+	int curY = tgtY;
+
+	SolvePath backtrack;
+	while (curX != x0 || curY != y0) {
+		SolveStep st = steps[curX * WallMask::Max + curY];
+		backtrack.push_back(st);
+
+		curX -= direction_dx[(int)st.dir];
+		curY -= direction_dy[(int)st.dir];
+	}
+
+	reverse(backtrack.begin(), backtrack.end());
+	*path = move(backtrack);
+
+	return true;
+}
+

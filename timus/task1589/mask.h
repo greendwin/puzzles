@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __MASK_H__
+#define __MASK_H__
 
 #include <cassert>
 
@@ -97,3 +98,5 @@ void mask_get_coords(const M& m, int* x, int* y) {
 	*y = int(yy & coord_mask);
 }
 
+
+#endif // __MASK_H__

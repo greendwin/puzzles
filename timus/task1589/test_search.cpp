@@ -99,3 +99,34 @@ TEST(Search, SolvePath) {
 		ASSERT_EQ(step[k].dir, path[k].dir);
 	}
 }
+
+
+TEST(Search, MoveTo) {
+	Level l;
+	level_load(
+		"######\n"
+		"#@   #\n"
+		"# ## #\n"
+		"#  # #\n"
+		"##!  #\n"
+		"######\n",
+		&l);
+
+	SolvePath path;
+	bool r = level_move_to(l, 2, 4, &path);
+	ASSERT_TRUE(r);
+
+	SolveStep step[] = {
+		{ 1, 1, Direction::Down },
+		{ 1, 2, Direction::Down	},
+		{ 1, 3, Direction::Right },
+		{ 2, 3, Direction::Down },
+	};
+
+	ASSERT_EQ(4, path.size());
+	for (int k = 0; k < 4; ++k) {
+		ASSERT_EQ(step[k].x, path[k].x);
+		ASSERT_EQ(step[k].y, path[k].y);
+		ASSERT_EQ(step[k].dir, path[k].dir);
+	}
+}

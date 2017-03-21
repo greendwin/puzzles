@@ -2,7 +2,9 @@
 #include <fstream>
 #include <sstream>
 
+#ifndef ONLINE_JUDGE
 #include "level.h"
+#endif
 
 using namespace std;
 

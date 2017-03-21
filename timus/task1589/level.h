@@ -1,9 +1,14 @@
-#pragma once
+#ifndef __LEVEL_H__
+#define __LEVEL_H__
+
 
 #include <iostream>
 #include <unordered_set>
 #include <vector>
+
+#ifndef ONLINE_JUDGE
 #include "mask.h"
+#endif
 
 
 using WallMask = Mask<uint64_t, 0, 8>;
@@ -69,6 +74,7 @@ LevelItem level_look_at(const Level& level, Direction dir);
 LevelItem level_look_at(const Level& level, int x, int y);
 
 MoveResult level_move_to(Level& level, Direction dir);
+bool level_move_to(Level level, int x, int y, SolvePath* path);
 
 bool level_is_finish_state(StateMask state, TargetsMask targets);
 inline bool level_is_finish_state(const Level& level) { return level_is_finish_state(level.state, level.targets); }
@@ -90,3 +96,5 @@ struct SolveContext {
 	StateMask deadend;
 };
 
+
+#endif // __LEVEL_H__

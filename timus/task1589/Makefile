@@ -8,6 +8,7 @@ TMP_DIR = tmp
 # source & other vars setup
 #
 EXEC = task
+EXEC_TIMUS = task_timus
 TESTS = unittests
 
 SRC = level.cpp search.cpp
@@ -38,14 +39,20 @@ LNKFLAGS = -lstdc++ -pthread
 #
 # targets
 #
-all: $(TMP_DIR) $(EXEC) $(TESTS)
+all: $(TMP_DIR) $(EXEC) $(EXEC_TIMUS) $(TESTS)
 gtest: $(TMP_DIR) gtest.a gtest_main.a
 
 clean:
-	rm -rf $(EXEC) $(TESTS) $(TMP_DIR) gtest.a gtest_main.a
+	rm -rf $(EXEC) $(EXEC_TIMUS) $(TESTS) $(TMP_DIR) _task_timus.cpp gtest.a gtest_main.a
 
 $(TMP_DIR):
 	mkdir -p $(TMP_DIR)
+
+$(TMP_DIR)/_task_timus.o: _task_timus.cpp
+	$(CPP) $(CPPFLAGS) -DONLINE_JUDGE -c $< -o $@
+
+_task_timus.cpp: $(HEADERS) $(SRC) $(EXEC_SRC)
+	cat mask.h level.h level.cpp search.cpp main.cpp > _task_timus.cpp
 
 $(TMP_DIR)/%.o: %.cpp $(HEADERS) $(GTEST_HEADERS)
 	$(CPP) $(CPPFLAGS) -c $< -o $@
@@ -54,6 +61,9 @@ $(EXEC): $(OBJS) $(EXEC_OBJS)
 	$(LNK) $(LNKFLAGS) $^ -o $@
 
 $(TESTS): $(OBJS) $(TESTS_OBJS) gtest_main.a
+	$(LNK) $(LNKFLAGS) $^ -o $@
+
+$(EXEC_TIMUS): $(TMP_DIR)/_task_timus.o
 	$(LNK) $(LNKFLAGS) $^ -o $@
 
 #
