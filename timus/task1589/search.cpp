@@ -45,7 +45,7 @@ DONE:
 }
 
 
-bool _level_solve(Level level, VisitedStates& visited) {
+static bool _level_solve(Level level, VisitedStates& visited, SolveContext* ctx) {
 	// check whether we in win state
 	if (level_is_finish_state(level.state, level.targets)) {
 		return true;
@@ -92,11 +92,23 @@ bool _level_solve(Level level, VisitedStates& visited) {
 					continue;
 				}
 
+				// don't move boxes to deadends
+				if (ctx != nullptr && mask_get(ctx->deadend, boxX, boxY)) {
+					continue;
+				}
+
 				mask_set(level.state, boxX, boxY);
 				mask_reset(level.state, x, y);
 				mask_set_coords(level.state, x, y);
 
-				if (_level_solve(level, visited)) {
+				if (ctx != nullptr) {
+					// store step
+					SolveStep step(x, y, (Direction)dir);
+
+					ctx->path.push_back(step);
+				}
+
+				if (_level_solve(level, visited, ctx)) {
 					return true;
 				}
 
@@ -104,6 +116,10 @@ bool _level_solve(Level level, VisitedStates& visited) {
 				mask_reset(level.state, boxX, boxY);
 				mask_set(level.state, x, y);
 				mask_set_coords(level.state, x0, y0);
+
+				if (ctx != nullptr) {
+					ctx->path.pop_back();
+				}
 			}
 		}
 	}
@@ -137,7 +153,7 @@ bool level_is_dead_position(const Level& level_, int x, int y) {
 		mask_set_coords(level.state, nextX, nextY);
 
 		VisitedStates visited;
-		if (_level_solve(level, visited)) {
+		if (_level_solve(level, visited, nullptr)) {
 			return false;
 		}
 	}
@@ -145,3 +161,46 @@ bool level_is_dead_position(const Level& level_, int x, int y) {
 	return true;
 }
 
+
+void level_mark_deadends(const Level& level_, StateMask* mask) {
+	Level level = level_;
+
+	// remove all boxes
+	int plrX, plrY;
+	mask_get_coords(level.state, &plrX, &plrY);
+	level.state = StateMask();
+	mask_set_coords(level.state, plrX, plrY);
+
+	// mark all places, where player can move
+	StateMask reachable;
+	level_mark_reachable(level, &reachable);
+
+	// mark unreachable cells
+	StateMask unreachable;
+	for (int x = StateMask::Offset; x < StateMask::Max; ++x) {
+		for (int y = StateMask::Offset; y < StateMask::Max; ++y) {
+			if (!mask_get(reachable, x, y)) {
+				continue;
+			}
+
+			if (level_is_dead_position(level, x, y)) {
+				mask_set(unreachable, x, y);
+			}
+		}
+	}
+
+	*mask = unreachable;
+}
+
+
+bool level_solve(const Level& level, SolvePath* path) {
+	VisitedStates visited;
+	SolveContext ctx;
+
+	level_mark_deadends(level, &ctx.deadend);
+	
+	bool r = _level_solve(level, visited, &ctx);
+	*path = std::move(ctx.path);
+
+	return r;
+}

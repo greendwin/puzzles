@@ -42,42 +42,42 @@ void run_game(Level& l) {
 }
 
 
-void print_unreachable_cells(const Level& level_) {
-	Level level = level_;
-
-	// remove all boxes
-	int plrX, plrY;
-	mask_get_coords(level.state, &plrX, &plrY);
-	level.state = StateMask();
-	mask_set_coords(level.state, plrX, plrY);
-
-	// mark all places, where player can move
-	StateMask reachable;
-	level_mark_reachable(level, &reachable);
-
-	// mark unreachable cells
+void print_unreachable_cells(const Level& level) {
 	StateMask unreachable;
-	for (int x = StateMask::Offset; x < StateMask::Max; ++x) {
-		for (int y = StateMask::Offset; y < StateMask::Max; ++y) {
-			if (!mask_get(reachable, x, y)) {
-				continue;
-			}
+	level_mark_deadends(level, &unreachable);
 
-			if (level_is_dead_position(level, x, y)) {
-				mask_set(unreachable, x, y);
-			}
-		}
+	level_print(level, cout, &unreachable);
+}
+
+
+void print_solution(Level level) {
+	SolvePath path;
+	level_solve(level, &path);
+
+	// initial
+	level_print(level, cout);
+
+	for (int k = 0; k < (int)path.size(); ++k) {
+		SolveStep step = path[k];
+		int plrX = step.x - direction_dx[(int)step.dir];
+		int plrY = step.y - direction_dy[(int)step.dir];
+
+		mask_set_coords(level.state, plrX, plrY);
+		level_move_to(level, step.dir);
+		getchar();
+		cout << "-\n";
+		level_print(level, cout);
 	}
-
-	level_print(level_, cout, &unreachable);
 }
 
 
 int main() {
 	Level l;
-	level_load_from_file("input.txt", &l);
+	//level_load_from_file("input.txt", &l);
+	level_load_from_file("level8.txt", &l);
 
-//	run_game(l);
-    print_unreachable_cells(l);
+	//run_game(l);
+    //print_unreachable_cells(l);
+	print_solution(l);
 	return 0;
 }

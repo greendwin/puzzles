@@ -52,8 +52,8 @@ TEST(Search, IsDeadPosition) {
 	level_load(
 		"######\n"
 		"#!@#.#\n"
-		"# ?# #\n"
-		"#!?? #\n"
+		"# ^# #\n"
+		"#!^^ #\n"
 		"### !#\n"
 		"######\n",
 		&l);
@@ -68,3 +68,34 @@ TEST(Search, IsDeadPosition) {
 	ASSERT_FALSE(level_is_dead_position(l, 3, 3));
 }
 
+
+TEST(Search, SolvePath) {
+	Level l;
+	level_load(
+		"######\n"
+		"# @#.#\n"
+		"# $# #\n"
+		"#    #\n"
+		"###  #\n"
+		"######\n",
+		&l);
+
+	SolvePath path;
+	bool r = level_solve(l, &path);
+	ASSERT_TRUE(r);
+
+	SolveStep step[] = {
+		{ 2, 2, Direction::Down },
+		{ 2, 3, Direction::Right },
+		{ 3, 3, Direction::Right },
+		{ 4, 3, Direction::Up },
+		{ 4, 2, Direction::Up },
+	};
+
+	ASSERT_EQ(5, path.size());
+	for (int k = 0; k < 5; ++k) {
+		ASSERT_EQ(step[k].x, path[k].x);
+		ASSERT_EQ(step[k].y, path[k].y);
+		ASSERT_EQ(step[k].dir, path[k].dir);
+	}
+}

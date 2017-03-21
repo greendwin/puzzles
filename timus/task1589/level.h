@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <unordered_set>
+#include <vector>
 #include "mask.h"
 
 
@@ -37,6 +38,19 @@ enum class MoveResult {
 };
 
 
+struct SolveStep {
+	int x;
+	int y;
+	Direction dir;
+
+	SolveStep(int x, int y, Direction dir)
+		: x(x), y(y), dir(dir)
+	{}
+};
+
+using SolvePath = std::vector<SolveStep>;
+
+
 struct Level {
 	WallMask walls;
 	TargetsMask targets;
@@ -62,8 +76,17 @@ inline bool level_is_finish_state(const Level& level) { return level_is_finish_s
 
 void level_mark_reachable(const Level& level, StateMask* mask);
 bool level_is_dead_position(const Level& level, int x, int y);
+void level_mark_deadends(const Level& level, StateMask* mask);
+bool level_solve(const Level& level, SolvePath* path);
 
 
 using VisitedStates = std::unordered_set<uint64_t>;
 inline void visited_state_add(VisitedStates& cont, StateMask state) { cont.insert(state.data); }
 inline bool visited_state_is(const VisitedStates& cont, StateMask state) { return cont.find(state.data) != cont.end(); }
+
+
+struct SolveContext {
+	SolvePath path;
+	StateMask deadend;
+};
+

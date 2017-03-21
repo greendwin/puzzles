@@ -346,8 +346,3 @@ TEST(Level, MoveBlockedBlock) {
 	ASSERT_TRUE(mask_get(l.state, 4, 2));
 }
 
-
-
-// TODO: >>> make interactive game
-// TODO: search algorithm (for single box -- unreachable places mask)
-
