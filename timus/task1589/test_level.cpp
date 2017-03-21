@@ -203,6 +203,151 @@ TEST(Level, PrintTargetWithPosBlock) {
 }
 
 
-// TODO: make interactive game
+TEST(Level, MovePlayerEmpty) {
+	Level l;
+	_level_setup_test_level(&l);
+
+	//	" ######\n"	// 0
+	//	"##  $ #\n"	// 1
+	//	"# @ $ #\n" // 2
+	//	"#.... #\n" // 3
+	//	"#######\n" // 4
+	//	 0123456
+
+	ASSERT_EQ(LevelItem::Empty, level_look_at(l, Direction::Left));
+	ASSERT_EQ(LevelItem::Empty, level_look_at(l, Direction::Up));
+	ASSERT_EQ(LevelItem::Empty, level_look_at(l, Direction::Right));
+	ASSERT_EQ(LevelItem::Empty, level_look_at(l, Direction::Down));
+}
+
+
+TEST(Level, MovePlayerBlocked) {
+	Level l;
+	_level_setup_test_level(&l);
+	mask_set_coords(l.state, 3, 1);
+
+	//	" ######\n"	// 0
+	//	"## @$ #\n"	// 1
+	//	"#   $ #\n" // 2
+	//	"#.... #\n" // 3
+	//	"#######\n" // 4
+	//	 0123456
+
+	ASSERT_EQ(LevelItem::Wall, level_look_at(l, Direction::Up));
+	ASSERT_EQ(LevelItem::Block, level_look_at(l, Direction::Right));
+}
+
+
+TEST(Level, Move) {
+	Level l;
+	_level_setup_test_level(&l);
+
+	//	" ######\n"	// 0
+	//	"##^ $ #\n"	// 1
+	//	"# @ $ #\n" // 2
+	//	"#.... #\n" // 3
+	//	"#######\n" // 4
+	//	 0123456
+
+	MoveResult r = level_move_to(l, Direction::Up);
+	ASSERT_EQ(MoveResult::Moved, r);
+
+	int x, y;
+	mask_get_coords(l.state, &x, &y);
+	ASSERT_EQ(2, x);
+	ASSERT_EQ(1, y);
+
+	//	" ######\n"	// 0
+	//	"##@>$ #\n"	// 1
+	//	"#   $ #\n" // 2
+	//	"#.... #\n" // 3
+	//	"#######\n" // 4
+	//	 0123456
+
+	r = level_move_to(l, Direction::Right);
+	ASSERT_EQ(MoveResult::Moved, r);
+
+	mask_get_coords(l.state, &x, &y);
+	ASSERT_EQ(3, x);
+	ASSERT_EQ(1, y);
+}
+
+
+TEST(Level, MoveWall) {
+	Level l;
+	_level_setup_test_level(&l);
+	mask_set_coords(l.state, 3, 1);
+
+	//	" ######\n"	// 0
+	//	"## @$ #\n"	// 1
+	//	"#   $ #\n" // 2
+	//	"#.... #\n" // 3
+	//	"#######\n" // 4
+	//	 0123456
+
+	MoveResult r = level_move_to(l, Direction::Up);
+	ASSERT_EQ(MoveResult::Blocked, r);
+
+	int x, y;
+	mask_get_coords(l.state, &x, &y);
+	ASSERT_EQ(3, x);
+	ASSERT_EQ(1, y);
+}
+
+
+TEST(Level, MoveBlock) {
+	Level l;
+	_level_setup_test_level(&l);
+	mask_set_coords(l.state, 3, 1);
+
+	//	" ######\n"	// 0
+	//	"## @$>#\n"	// 1
+	//	"#   $ #\n" // 2
+	//	"#.... #\n" // 3
+	//	"#######\n" // 4
+	//	 0123456
+
+	MoveResult r = level_move_to(l, Direction::Right);
+	ASSERT_EQ(MoveResult::MovedBlock, r);
+
+	int x, y;
+	mask_get_coords(l.state, &x, &y);
+	ASSERT_EQ(4, x);
+	ASSERT_EQ(1, y);
+
+	// check block moved
+	ASSERT_FALSE(mask_get(l.state, 4, 1));
+	ASSERT_TRUE(mask_get(l.state, 5, 1));
+}
+
+
+TEST(Level, MoveBlockedBlock) {
+	Level l;
+	_level_setup_test_level(&l);
+	mask_set_coords(l.state, 4, 3);
+
+	//	" ######\n"	// 0
+	//	"##  $ #\n"	// 1
+	//	"#   $ #\n" // 2
+	//	"#...^ #\n" // 3
+	//	"#######\n" // 4
+	//	 0123456
+
+	MoveResult r = level_move_to(l, Direction::Up);
+	ASSERT_EQ(MoveResult::Blocked, r);
+
+	int x, y;
+	mask_get_coords(l.state, &x, &y);
+	ASSERT_EQ(4, x);
+	ASSERT_EQ(3, y);
+
+	// blocks positions
+	ASSERT_TRUE(mask_get(l.state, 4, 1));
+	ASSERT_TRUE(mask_get(l.state, 4, 2));
+}
+
+
+
+// TODO: >>> make interactive game
 // TODO: search algorithm (for single box -- unreachable places mask)
 

@@ -7,6 +7,10 @@
 using namespace std;
 
 
+int direction_dx[] = { -1, 0, 1, 0 };
+int direction_dy[] = { 0, -1, 0, 1 };
+
+
 void level_load_from_file(const char* filename, Level* level) {
 	ifstream input{filename};
 	level_load(input, level);
@@ -126,5 +130,77 @@ void level_print(const Level& level, ostream& output) {
 		}
 		output << '\n';
 	}
+}
+
+
+LevelItem level_look_at(const Level& level, Direction dir) {
+	int posX, posY;
+	mask_get_coords(level.state, &posX, &posY);
+
+	posX += direction_dx[(int)dir];
+	posY += direction_dy[(int)dir];
+
+	return level_look_at(level, posX, posY);
+}
+
+
+LevelItem level_look_at(const Level& level, int x, int y) {
+	if (mask_get(level.walls, x, y)) {
+		return LevelItem::Wall;
+	}
+
+	if (mask_get(level.state, x, y)) {
+		return LevelItem::Block;
+	}
+
+	return LevelItem::Empty;
+}
+
+
+MoveResult level_move_to(Level& level, Direction dir) {
+	LevelItem next = level_look_at(level, dir);
+	if (next == LevelItem::Wall) {
+		// cannot move here
+		return MoveResult::Blocked;
+	}
+
+	if (next == LevelItem::Empty) {
+		int posX, posY;
+		mask_get_coords(level.state, &posX, &posY);
+
+		posX += direction_dx[(int)dir];
+		posY += direction_dy[(int)dir];
+		mask_set_coords(level.state, posX, posY);
+
+		return MoveResult::Moved;
+	}
+
+	assert(next == LevelItem::Block);
+
+	// player pos
+	int posX, posY;
+	mask_get_coords(level.state, &posX, &posY);
+
+	// new player pos
+	int nextX = posX + direction_dx[(int)dir];
+	int nextY = posY + direction_dy[(int)dir];
+
+	// new block pos
+	int blockX = nextX + direction_dx[(int)dir];
+	int blockY = nextY + direction_dy[(int)dir];
+
+	if (level_look_at(level, blockX, blockY) != LevelItem::Empty) {
+		// cannot move this block
+		return MoveResult::Blocked;
+	}
+
+	// set player pos
+	mask_set_coords(level.state, nextX, nextY);
+
+	// move block
+	mask_reset(level.state, nextX, nextY);
+	mask_set(level.state, blockX, blockY);
+
+	return MoveResult::MovedBlock;
 }
 
