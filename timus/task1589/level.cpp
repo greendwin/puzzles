@@ -196,7 +196,7 @@ MoveResult level_move_to(Level& level, Direction dir) {
 	int blockX = nextX + direction_dx[(int)dir];
 	int blockY = nextY + direction_dy[(int)dir];
 
-	if (level_look_at(level, blockX, blockY) != LevelItem::Empty) {
+	if (!level_is_empty(level, blockX, blockY)) {
 		// cannot move this block
 		return MoveResult::Blocked;
 	}

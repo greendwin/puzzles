@@ -75,11 +75,18 @@ void print_solution(Level level) {
 
 
 void print_solution_by_steps(Level level) {
-	SolvePath path;
-	level_solve(level, &path);
-
 	// initial
 	level_print(level, cout);
+
+	cout << "Searching...\n";
+
+	SolvePath path;
+	bool r = level_solve(level, &path);
+
+	if (!r) {
+		cout << "No solution!\n";
+		return ;
+	}
 
 	for (int k = 0; k < (int)path.size(); ++k) {
 		int curX, curY;
@@ -169,7 +176,7 @@ int main() {
 	level_load(cin, &l);
 	print_timus(l);
 #else
-	level_load_from_file("input2.txt", &l);
+	level_load_from_file("input5.txt", &l);
 	//level_load_from_file("level8.txt", &l);
 
 	//run_game(l);

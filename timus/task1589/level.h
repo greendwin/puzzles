@@ -23,7 +23,7 @@ enum class LevelItem {
 };
 
 
-enum class Direction {
+enum class Direction : int8_t {
 	Left,
 	Up,
 	Right,
@@ -44,8 +44,8 @@ enum class MoveResult {
 
 
 struct SolveStep {
-	int x;
-	int y;
+	int8_t x;
+	int8_t y;
 	Direction dir;
 
 	SolveStep(int x, int y, Direction dir)
@@ -72,6 +72,9 @@ void level_print(const Level& level, std::ostream& output, const StateMask* over
 
 LevelItem level_look_at(const Level& level, Direction dir);
 LevelItem level_look_at(const Level& level, int x, int y);
+inline bool level_is_empty(const Level& level, int x, int y) {
+	return !mask_get(level.walls, x, y) && !mask_get(level.state, x, y);
+}
 
 MoveResult level_move_to(Level& level, Direction dir);
 bool level_move_to(Level level, int x, int y, SolvePath* path);
@@ -81,8 +84,8 @@ inline bool level_is_finish_state(const Level& level) { return level_is_finish_s
 
 
 void level_mark_reachable(const Level& level, StateMask* mask);
-bool level_is_dead_position(const Level& level, int x, int y);
 void level_mark_deadends(const Level& level, StateMask* mask);
+bool level_is_dead_position(const Level& level, int x, int y);
 bool level_solve(const Level& level, SolvePath* path);
 
 
@@ -94,6 +97,16 @@ inline bool visited_state_is(const VisitedStates& cont, StateMask state) { retur
 struct SolveContext {
 	SolvePath path;
 	StateMask deadend;
+};
+
+
+struct LevelPosition {
+	int8_t x;
+	int8_t y;
+
+	LevelPosition(int x = 0, int y = 0)
+		: x(x), y(y)
+	{}
 };
 
 

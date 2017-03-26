@@ -130,3 +130,4 @@ TEST(Search, MoveTo) {
 		ASSERT_EQ(step[k].dir, path[k].dir);
 	}
 }
+

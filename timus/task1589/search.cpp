@@ -16,7 +16,7 @@ static void _level_mark(const Level& level, int x, int y, StateMask& mask) {
 		int nextX = x + direction_dx[k];
 		int nextY = y + direction_dy[k];
 
-		if (level_look_at(level, nextX, nextY) != LevelItem::Empty) {
+		if (!level_is_empty(level, nextX, nextY)) {
 			continue;
 		}
 
@@ -53,6 +53,9 @@ DONE:
 
 
 static bool _level_solve(Level level, VisitedStates& visited, SolveContext* ctx) {
+	// level_print(level, cout);
+	// getchar();
+
 	// check whether we in win state
 	if (level_is_finish_state(level.state, level.targets)) {
 		return true;
@@ -75,6 +78,10 @@ static bool _level_solve(Level level, VisitedStates& visited, SolveContext* ctx)
 	// mark current state as visited
 	visited_state_add(visited, level.state);
 
+	const int MAX_BOXES = StateMask::Dimension * StateMask::Dimension;
+	LevelPosition boxes[MAX_BOXES];
+	int numBoxes = 0;
+
 	// iter over all boxes
 	for (int x = StateMask::Offset; x < StateMask::Max; ++x) {
 		for (int y = StateMask::Offset; y < StateMask::Max; ++y) {
@@ -82,51 +89,70 @@ static bool _level_solve(Level level, VisitedStates& visited, SolveContext* ctx)
 				continue;
 			}
 
-			for (int dir = 0; dir < direction_count; ++dir) {
-				int plrX = x - direction_dx[dir];
-				int plrY = y - direction_dy[dir];
+			boxes[numBoxes] = LevelPosition(x, y);
+			++numBoxes;
+		}
+	}
 
-				// check whether we can come to this container to move it
-				if (!mask_get(reachable, plrX, plrY)) {
-					continue;
-				}
+	// try boxes not on targets first
+	std::sort(boxes, boxes + numBoxes, [&level](LevelPosition a, LevelPosition b) {
+		int on_target_A = mask_get(level.targets, a.x, a.y);
+		int on_target_B = mask_get(level.targets, b.x, b.y);
+		if (on_target_A < on_target_B) {
+			return true;
+		}
 
-				int boxX = x + direction_dx[dir];
-				int boxY = y + direction_dy[dir];
+		return false;
+	});
 
-				// check whether we can move the box to this direction
-				if (level_look_at(level, boxX, boxY) != LevelItem::Empty) {
-					continue;
-				}
+	for (int idx = 0; idx < numBoxes; ++idx) {
+		int x = boxes[idx].x;
+		int y = boxes[idx].y;
 
-				// don't move boxes to deadends
-				if (ctx != nullptr && mask_get(ctx->deadend, boxX, boxY)) {
-					continue;
-				}
+		for (int dir = 0; dir < direction_count; ++dir) {
+			int plrX = x - direction_dx[dir];
+			int plrY = y - direction_dy[dir];
 
-				mask_set(level.state, boxX, boxY);
-				mask_reset(level.state, x, y);
-				mask_set_coords(level.state, x, y);
+			// check whether we can come to this container to move it
+			if (!mask_get(reachable, plrX, plrY)) {
+				continue;
+			}
 
-				if (ctx != nullptr) {
-					// store step
-					SolveStep step(x, y, (Direction)dir);
+			int boxX = x + direction_dx[dir];
+			int boxY = y + direction_dy[dir];
 
-					ctx->path.push_back(step);
-				}
+			// check whether we can move the box to this direction
+			if (!level_is_empty(level, boxX, boxY)) {
+				continue;
+			}
 
-				if (_level_solve(level, visited, ctx)) {
-					return true;
-				}
+			// don't move boxes to deadends
+			if (ctx != nullptr && mask_get(ctx->deadend, boxX, boxY)) {
+				continue;
+			}
 
-				// recover level state
-				mask_reset(level.state, boxX, boxY);
-				mask_set(level.state, x, y);
-				mask_set_coords(level.state, x0, y0);
+			mask_set(level.state, boxX, boxY);
+			mask_reset(level.state, x, y);
+			mask_set_coords(level.state, x, y);
 
-				if (ctx != nullptr) {
-					ctx->path.pop_back();
-				}
+			if (ctx != nullptr) {
+				// store step
+				SolveStep step(x, y, (Direction)dir);
+
+				ctx->path.push_back(step);
+			}
+
+			if (_level_solve(level, visited, ctx)) {
+				return true;
+			}
+
+			// recover level state
+			mask_reset(level.state, boxX, boxY);
+			mask_set(level.state, x, y);
+			mask_set_coords(level.state, x0, y0);
+
+			if (ctx != nullptr) {
+				ctx->path.pop_back();
 			}
 		}
 	}
@@ -239,12 +265,12 @@ bool level_move_to(Level level, int tgtX, int tgtY, SolvePath* path) {
 		}
 
 		for (int dir = 0; dir < direction_count; ++dir) {
-			if (level_look_at(level, (Direction)dir) != LevelItem::Empty) {
-				continue;
-			}
-
 			int nextX = x + direction_dx[dir];
 			int nextY = y + direction_dy[dir];
+
+			if (!level_is_empty(level, nextX, nextY)) {
+				continue;
+			}
 
 			if (mask_get(visited, nextX, nextY)) {
 				continue;
